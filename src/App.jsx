@@ -1,47 +1,58 @@
-import { useState, useEffect } from "react";
-import Buscar from "./componentes/Buscar";
-import Lista from "./componentes/Lista";
-import "./estilos/estilo.css";
+import React, { useState, useEffect } from "react";
+import "./style.css";
+import Busqueda from "./components/Busqueda";
+import ListaPersonajes from "./components/ListaPersonajes";
 
-function App() {
-  const [elementos, setElementos] = useState([]);
+const App = () => {
+  const [personajes, setPersonajes] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [favoritos, setFavoritos] = useState([]);
 
-  // Función para buscar los elementos en la API
   useEffect(() => {
-    const buscarElementos = async () => {
-      let url = `https://rickandmortyapi.com/api/character/?name=${busqueda}`;
-      if (busqueda === "") {
-        url = "https://rickandmortyapi.com/api/character";
-      }
+    // Cada vez que cambie "busqueda", se realiza una nueva llamada a la API
+    const url = busqueda
+      ? `https://rickandmortyapi.com/api/character/?name=${busqueda}`
+      : "https://rickandmortyapi.com/api/character/";
 
-      const response = await fetch(url);
-      const data = await response.json();
-      setElementos(data.results || []); // Si no hay resultados, mostramos un array vacío
-    };
-
-    buscarElementos();
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => setPersonajes(data.results || []))
+      .catch((error) => {
+        console.error("Error al obtener personajes:", error);
+        setPersonajes([]);
+      });
   }, [busqueda]);
 
-  // Función para agregar a favoritos
-  const agregarAFavoritos = (elemento) => {
-    setFavoritos([...favoritos, elemento]);
+  const agregarAFavoritos = (personaje) => {
+    // Se evita agregar duplicados
+    if (!favoritos.some((fav) => fav.id === personaje.id)) {
+      setFavoritos([...favoritos, personaje]);
+    }
   };
 
   return (
-    <div className="app">
-      <h1>Catálogo Interactivo</h1>
-      <Buscar setBusqueda={setBusqueda} />
-      <Lista elementos={elementos} agregarAFavoritos={agregarAFavoritos} />
+    <div className="App">
+      <h1>Listado de Personajes</h1>
+      <Busqueda busqueda={busqueda} setBusqueda={setBusqueda} />
+      <ListaPersonajes
+        personajes={personajes}
+        agregarAFavoritos={agregarAFavoritos}
+      />
       <h2>Favoritos</h2>
-      <ul>
-        {favoritos.map((favorito, index) => (
-          <li key={index}>{favorito.name}</li>
-        ))}
-      </ul>
+      <div className="favoritos">
+        {favoritos.length > 0 ? (
+          favoritos.map((fav) => (
+            <div key={fav.id} className="favorito">
+              <img src={fav.image} alt={fav.name} />
+              <p>{fav.name}</p>
+            </div>
+          ))
+        ) : (
+          <p>No tienes favoritos.</p>
+        )}
+      </div>
     </div>
   );
-}
+};
 
 export default App;
