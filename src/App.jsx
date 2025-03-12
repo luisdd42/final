@@ -1,35 +1,47 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+import Buscar from "./componentes/Buscar";
+import Lista from "./componentes/Lista";
+import "./estilos/estilo.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [elementos, setElementos] = useState([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [favoritos, setFavoritos] = useState([]);
+
+  // Función para buscar los elementos en la API
+  useEffect(() => {
+    const buscarElementos = async () => {
+      let url = `https://rickandmortyapi.com/api/character/?name=${busqueda}`;
+      if (busqueda === "") {
+        url = "https://rickandmortyapi.com/api/character";
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+      setElementos(data.results || []); // Si no hay resultados, mostramos un array vacío
+    };
+
+    buscarElementos();
+  }, [busqueda]);
+
+  // Función para agregar a favoritos
+  const agregarAFavoritos = (elemento) => {
+    setFavoritos([...favoritos, elemento]);
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="app">
+      <h1>Catálogo Interactivo</h1>
+      <Buscar setBusqueda={setBusqueda} />
+      <Lista elementos={elementos} agregarAFavoritos={agregarAFavoritos} />
+      <h2>Favoritos</h2>
+      <ul>
+        {favoritos.map((favorito, index) => (
+          <li key={index}>{favorito.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 
-export default App
+export default App;
